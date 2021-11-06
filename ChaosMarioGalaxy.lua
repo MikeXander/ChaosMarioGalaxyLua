@@ -1,10 +1,19 @@
--- Authors: BillyWAR & ERGC|Xander
+--[[
+
+Chaos Mario Galaxy v-1.0
+by BillyWAR and Xander
+
+]]
+
+
+
 
 local random = math.random
 local Distribution = require("Probabilities")
 local Codes = require("Codes")
+local Memory = require("Memory")
 
--- Note: every code is currently equally likely
+-- Note: every code is equally likely
 
 local function TEXT(msg) -- debug messages
 	if false then
@@ -20,12 +29,17 @@ function onScriptCancel()
     MsgBox("Script Closed")
     SetScreenText("")
 end
+--[[
+Random interval to switch -> switch every 60s +- [5s]
+Random number of codes -> 2-5 on at once
+Random which codes to turn off
 
-local objListAddress = 0x0
-local objListStart = 0x0
-local objCount = 0
-local marioAddress = 0x0
-
+Types of "Codes"
+- Visual
+- Physics
+- Objects
+- Different difficulty levels: easy/medium/hard?
+]]
 
 local NumEnabledCodes = 0
 local TargetNumCodes = 2
@@ -110,7 +124,7 @@ end
 
 
 local function OncePerFrame()
-	--Memory.Update()
+	test = Memory.Update()
 
 	-- Update the number of codes running at any given moment
 	if ChangeTargetTimer == 0 then
@@ -138,12 +152,12 @@ function onScriptUpdate()
 	OncePerFrame()
 
 	SetScreenText(string.format(
-		"\n\n\n\n\n\n\n\n\nNumEnabled: %d\nNumTarget: %d\nTimer: %d\n" .. ActiveCodes(),
-		NumEnabledCodes, TargetNumCodes, ChangeTargetTimer
+		"\n\n\n\n\nNumEnabled: %d\nNumTarget: %d\nTimer: %d\n" .. ActiveCodes() .. "\n\nObject Count: %d\n",
+		NumEnabledCodes, TargetNumCodes, ChangeTargetTimer, #Memory.Objects
 	))
 
-	--[[
-	
+
+	--[[	
 	if ReadValue32(0x806A2508) == frame then 
 		SetScreenText("test")
 		return end
@@ -193,7 +207,7 @@ function onScriptUpdate()
 		WriteValue16(marioAddress+0x3D4,07)
 	end]]
 
-	--[[ Flip X Input -- a test that doesnt work
+	--[[ Flip X Input
 	local offsets = {0x0, 0x60, 0xC0}
 	for i,o in pairs(offsets) do
 		local addr = 0x661210 + o

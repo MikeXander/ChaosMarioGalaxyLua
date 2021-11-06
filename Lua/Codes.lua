@@ -1,13 +1,5 @@
 local Memory = require("Memory")
 
---[[ TODO ?
-Types of "Codes"
-- Visual
-- Physics
-- Objects
-- Different difficulty levels: easy/medium/hard?
-]]
-
 local SampleCode = {
 	name = "test",
 	duration = 1, -- number of frames the code lasts
@@ -19,68 +11,42 @@ local SampleCode = {
 	end,
 	disable = function(self)
 
-	end
+	end,
 }
 
 local Codes = {
 	{
-		name = "Random Health",
+		name = "Big Mario",
 		duration = 60,
+		enable = function(self)
+			Memory.Objects[5].Size.X = 5
+			Memory.Objects[5].Size.Y = 5
+			Memory.Objects[5].Size.Z = 5
+		end,
 		update = function(self)
-			local frame = ReadValue32(0x806A2508) -- Memory.Frame ? Address.Frame ?
-			if (frame % 5 == 0) then
-				--local marioHealth = ReadValue32(Memory.Player.Address+0x380)
-				--WriteValue32(Memory.Player.Address+0x380,(marioHealth+1) % 7)
-			end
+
+		end,
+		disable = function(self)
+			Memory.Objects[5].Size.X = 1
+			Memory.Objects[5].Size.Y = 1
+			Memory.Objects[5].Size.Z = 1
 		end
 	},
 	{
-		name = "A",
+		name = "Small Mario",
 		duration = 60,
+		enable = function(self)
+			Memory.Objects[5].Size.X = 0.2
+			Memory.Objects[5].Size.Y = 0.2
+			Memory.Objects[5].Size.Z = 0.2
+		end,
 		update = function(self)
 
-		end
-	},
-	{
-		name = "Aa",
-		duration = 60,
-		update = function(self)
-
-		end
-	},
-	{
-		name = "B",
-		duration = 60,
-		update = function(self)
-
-		end
-	},
-	{
-		name = "Best Code",
-		duration = 60,
-		update = function(self)
-
-		end
-	},
-	{
-		name = "DN",
-		duration = 60,
-		update = function(self)
-
-		end
-	},
-	{
-		name = "DaCode",
-		duration = 62,
-		update = function(self)
-
-		end
-	},
-	{
-		name = "Nice",
-		duration = 69,
-		update = function(self)
-
+		end,
+		disable = function(self)
+			Memory.Objects[5].Size.X = 1
+			Memory.Objects[5].Size.Y = 1
+			Memory.Objects[5].Size.Z = 1
 		end
 	}
 }
