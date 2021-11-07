@@ -33,6 +33,9 @@ local ChangeTargetTimer = 0 -- once it hits 0 choose new codes
 local ActiveCodeIndices = {} -- the first NumEnabledCodes entries are codes in use
 for i = 1, #Codes do ActiveCodeIndices[i] = i end
 
+local function PermCodes()
+	WriteValue16(0x80F63CF0,99) -- Infinite Lives
+end
 
 -- idea: recently used codes less likely
 -- move disabled codes to back of array
@@ -59,6 +62,8 @@ end
 
 
 local function UpdateCodes()
+
+	PermCodes() --Permanent Effects we Always Want (Possibly for Testing)
 	for i = 1, NumEnabledCodes do
 		local c = ActiveCodeIndices[i]
 		Codes[c].timer = Codes[c].timer + 1

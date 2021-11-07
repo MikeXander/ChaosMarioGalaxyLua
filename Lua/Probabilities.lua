@@ -9,7 +9,9 @@ local distribution = {
 
 function distribution.NumCodes()
     local chances = { -- this is very dumb
-        1
+        1,
+        2, 2, 2,
+        3, 3
     }
     return chances[random(1, #chances)]
 end
