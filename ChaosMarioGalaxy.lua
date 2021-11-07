@@ -1,12 +1,9 @@
 --[[
 
-Chaos Mario Galaxy v-1.0
+Chaos Mario Galaxy v-1.1
 by BillyWAR and Xander
 
 ]]
-
-
-
 
 local random = math.random
 local Distribution = require("Probabilities")
@@ -29,17 +26,6 @@ function onScriptCancel()
     MsgBox("Script Closed")
     SetScreenText("")
 end
---[[
-Random interval to switch -> switch every 60s +- [5s]
-Random number of codes -> 2-5 on at once
-Random which codes to turn off
-
-Types of "Codes"
-- Visual
-- Physics
-- Objects
-- Different difficulty levels: easy/medium/hard?
-]]
 
 local NumEnabledCodes = 0
 local TargetNumCodes = 2
@@ -59,7 +45,6 @@ local function ReplaceCode(CurrentIndex)
 	Codes[ActiveCodeIndices[CurrentIndex]].timer = Distribution.ShortCodeDelay()
 end
 
--- ACI: [6 7 5 _ ... 8 _]
 
 local function EnableNewCode()
 	NumEnabledCodes = NumEnabledCodes + 1
@@ -96,7 +81,7 @@ local function UpdateCodes()
 				ActiveCodeIndices[i] = swap
 				i = i - 1
 			end
-		else
+		elseif Codes[c].timer > 0 and Codes[c].update then
 			Codes[c]:update()
 		end
 	end
@@ -104,27 +89,23 @@ end
 
 
 local function ActiveCodes()
-	local s = ""
+	local names = ""
 	for i = 1, NumEnabledCodes do
-		if i > 1 then s = s .. ", " end
-		s = s .. Codes[ActiveCodeIndices[i]].name .. string.format(" (%d)", Codes[ActiveCodeIndices[i]].timer)
+		if i > 1 then names = names .. ", " end
+		names = names .. Codes[ActiveCodeIndices[i]].name .. string.format(" (%d)", Codes[ActiveCodeIndices[i]].timer)
 	end
-	s = s .. "\n["
-	for i = 1, NumEnabledCodes do
-		if i > 1 then s = s .. ", " end
-		s = s .. ActiveCodeIndices[i]
+	local indices = "["
+	for i = 1, #ActiveCodeIndices do
+		if 1 < i and i ~= NumEnabledCodes + 1 then indices = indices .. ", " end
+		indices = indices .. ActiveCodeIndices[i]
+		if i == NumEnabledCodes then indices = indices .. "] [" end
 	end
-	s = s .. "] ["
-	for i = NumEnabledCodes + 1, #ActiveCodeIndices do
-		if i > NumEnabledCodes + 1 then s = s .. ", " end
-		s = s .. ActiveCodeIndices[i]
-	end
-	return s .. "]"
+	return names .. "\n" .. indices .. "]"
 end
 
 
 local function OncePerFrame()
-	test = Memory.Update()
+	Memory.Update()
 
 	-- Update the number of codes running at any given moment
 	if ChangeTargetTimer == 0 then
@@ -155,71 +136,4 @@ function onScriptUpdate()
 		"\n\n\n\n\nNumEnabled: %d\nNumTarget: %d\nTimer: %d\n" .. ActiveCodes() .. "\n\nObject Count: %d\n",
 		NumEnabledCodes, TargetNumCodes, ChangeTargetTimer, #Memory.Objects
 	))
-
-
-	--[[	
-	if ReadValue32(0x806A2508) == frame then 
-		SetScreenText("test")
-		return end
-    frame = ReadValue32(0x806A2508)
-
-	
-
-	objAddresses = {}
-	for i = 1,objCount do
-		objAddresses[i] = ReadValue32(objListAddress+i*4)
-	end
-	if (objCount > 11) then
-		marioAddress = objAddresses[12]
-	end
-
-	--Infinite Lives
-	WriteValue16(0x80F63CF0,99)
- 
-	--Change Positions
-	exponent = math.random(-3,2)
-	mantissa = math.random()+1
-
-	if (objCount > 11) then
-		ranObject = math.random(12,objCount)
-
-		ranFloat = mantissa^exponent
-		ranDirection = math.random(1,3)
-
-		WriteValueFloat(objAddresses[ranObject]+0x20+0x04*ranDirection,ranFloat)
-	end
-
-	--Random Music
-	if (ReadValue16(0x807C5D24) == 0) then
-		ranSong = math.random(14,88)
-		WriteValue32(0x807C5E04,ranSong)
-	end
-
-
-	--Flying Powerup/No Powerup
-	if (frame % 10000 == 0) then
-		WriteValue16(marioAddress+0x3D4,07)
-	elseif (frame % 10000 == 1000) then
-		WriteValue16(marioAddress+0x3D4,07)
-	elseif (frame % 10000 == 5000) then
-		WriteValue16(marioAddress+0x3D4,09)
-	elseif (frame % 10000 == 7000) then
-		WriteValue16(marioAddress+0x3D4,07)
-	end]]
-
-	--[[ Flip X Input
-	local offsets = {0x0, 0x60, 0xC0}
-	for i,o in pairs(offsets) do
-		local addr = 0x661210 + o
-		local x = ReadValue8(addr)
-		WriteValue8(addr + 0, x == -128 and 127 or -x)
-		local y = ReadValue8(addr + 1)
-		WriteValue8(addr + 1, y == -128 and 127 or -y)
-	end
-
-	WriteValueFloat(0x61D3A0, -ReadValueFloat(0x61D3A0))
-	WriteValueFloat(0x61D3A4, -ReadValueFloat(0x61D3A4))
-	--]]
-	-- 15 <--> 241
-	-- 127 <--> 128
 end

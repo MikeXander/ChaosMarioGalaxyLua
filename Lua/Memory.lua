@@ -1,4 +1,10 @@
 local Memory = {
+    OFFSETS = {
+        POSITION = 0x0C,
+        ROTATION = 0x18,
+        SIZE = 0x24,
+        SPEED = 0x30
+    },
     Objects = { -- Array of objects
 
     },
@@ -41,13 +47,34 @@ function Object:new(tableX) -- Constructor for a new Object
 end
 
 function Memory.newObject(tableX) -- Method you should actually call to make a new object
+    local function set(addr)
+        return function(x, y, z)
+            WriteValueFloat(addr, x)
+            WriteValueFloat(addr + 4, y)
+            WriteValueFloat(addr + 8, z)
+        end
+    end
     return Object:new({
     Address = tableX[1],
     Name = tableX[2],
-    Position = {X = tableX[3][1], Y = tableX[3][2], Z = tableX[3][3]},
-    Rotation = {X = tableX[4][1], Y = tableX[4][2], Z = tableX[4][3]},
-    Size = {X = tableX[5][1], Y = tableX[5][2], Z = tableX[5][3]},
-    Speed = {X = tableX[6][1], Y = tableX[6][2], Z = tableX[6][3]},
+    Position = {X = tableX[3][1], Y = tableX[3][2], Z = tableX[3][3], Set = set(tableX[1] + Memory.OFFSETS.POSITION)},
+    Rotation = {X = tableX[4][1], Y = tableX[4][2], Z = tableX[4][3], Set = set(tableX[1] + Memory.OFFSETS.ROTATION)},
+    Size = {X = tableX[5][1], Y = tableX[5][2], Z = tableX[5][3], Set = set(tableX[1] + Memory.OFFSETS.SIZE)},
+    Speed = {X = tableX[6][1], Y = tableX[6][2], Z = tableX[6][3], Set = set(tableX[1] + Memory.OFFSETS.SPEED)},
+    Update = function(self)
+        self.Position.X = ReadValueFloat(tableX[1] + Memory.OFFSETS.POSITION)
+        self.Position.Y = ReadValueFloat(tableX[1] + Memory.OFFSETS.POSITION + 4)
+        self.Position.Z = ReadValueFloat(tableX[1] + Memory.OFFSETS.POSITION + 8)
+        self.Rotation.X = ReadValueFloat(tableX[1] + Memory.OFFSETS.ROTATION)
+        self.Rotation.Y = ReadValueFloat(tableX[1] + Memory.OFFSETS.ROTATION + 4)
+        self.Rotation.Z = ReadValueFloat(tableX[1] + Memory.OFFSETS.ROTATION + 8)
+        self.Size.X = ReadValueFloat(tableX[1] + Memory.OFFSETS.SIZE)
+        self.Size.Y = ReadValueFloat(tableX[1] + Memory.OFFSETS.SIZE + 4)
+        self.Size.Z = ReadValueFloat(tableX[1] + Memory.OFFSETS.SIZE + 8)
+        self.Speed.X = ReadValueFloat(tableX[1] + Memory.OFFSETS.SPEED)
+        self.Speed.Y = ReadValueFloat(tableX[1] + Memory.OFFSETS.SPEED + 4)
+        self.Speed.Z = ReadValueFloat(tableX[1] + Memory.OFFSETS.SPEED + 8)
+    end
     })
 end
 
@@ -67,45 +94,36 @@ end
 
 function Memory.Update() -- Memory Updater
 
-    objListAddress = ReadValue32(0x809A9290)
-    objListStart = ReadValue32(objListAddress + 0x14)
-    objCount = ReadValue32(objListAddress + 0x10)
+    local objListAddress = ReadValue32(0x809A9290)
+    local objListStart = ReadValue32(objListAddress + 0x14)
+    local objCount = ReadValue32(objListAddress + 0x10)
 
     if objCount ~= #Memory.Objects then -- Recalculate everything if the object list has changed
         Memory.Objects = {}
         for i = 1,objCount do 
-            objAddress = ReadValue32(objListStart+4*i)
-            objName = getName(objAddress+4)
+            local objAddress = ReadValue32(objListStart+4*i)
+            local objName = getName(objAddress+4)
 
-            objPos = {ReadValueFloat(objAddress+0x0C),ReadValueFloat(objAddress+0x10),ReadValueFloat(objAddress+0x14)}
-            objRot = {ReadValueFloat(objAddress+0x18),ReadValueFloat(objAddress+0x1C),ReadValueFloat(objAddress+0x20)}
-            objSize = {ReadValueFloat(objAddress+0x24),ReadValueFloat(objAddress+0x28),ReadValueFloat(objAddress+0x2C)}
-            objSpeed = {ReadValueFloat(objAddress+0x30),ReadValueFloat(objAddress+0x34),ReadValueFloat(objAddress+0x38)}
+            local function ReadTriple(offset)
+                return {
+                    ReadValueFloat(objAddress + offset),
+                    ReadValueFloat(objAddress + offset + 4),
+                    ReadValueFloat(objAddress + offset + 8)
+                }
+            end
+            local objPos = ReadTriple(Memory.OFFSETS.POSITION)
+            local objRot = ReadTriple(Memory.OFFSETS.ROTATION)
+            local objSize = ReadTriple(Memory.OFFSETS.SIZE)
+            local objSpeed = ReadTriple(Memory.OFFSETS.SPEED)
 
             Memory.Objects[i] = Memory.newObject({objAddress, objName, objPos, objRot, objSize, objSpeed})
-        end
-    else
-        for i = 1,objCount do
-            Memory.Objects[i].Position.X = ReadValueFloat(objAddress+0x0C)
-            Memory.Objects[i].Position.Y = ReadValueFloat(objAddress+0x10)
-            Memory.Objects[i].Position.Z = ReadValueFloat(objAddress+0x14)
-            Memory.Objects[i].Rotation.X = ReadValueFloat(objAddress+0x18)
-            Memory.Objects[i].Rotation.Y = ReadValueFloat(objAddress+0x1C)
-            Memory.Objects[i].Rotation.Z = ReadValueFloat(objAddress+0x20)
-            Memory.Objects[i].Size.X = ReadValueFloat(objAddress+0x24)
-            Memory.Objects[i].Size.Y = ReadValueFloat(objAddress+0x28)
-            Memory.Objects[i].Size.Z = ReadValueFloat(objAddress+0x2C)
-            Memory.Objects[i].Speed.X = ReadValueFloat(objAddress+0x30)
-            Memory.Objects[i].Speed.Y = ReadValueFloat(objAddress+0x34)
-            Memory.Objects[i].Speed.Z = ReadValueFloat(objAddress+0x38)
         end
     end
 
     if objCount >= 5 then -- Mario/Luigi's Address (TODO: Figure out cases where it isn't the 5th address ie Bubble Breeze)
-        Player = Memory.Objects[5]
+        Memory.Player = Memory.Objects[5]
     end
 
-    return Memory
 end
 
 return Memory
